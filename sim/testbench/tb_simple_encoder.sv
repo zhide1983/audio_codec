@@ -200,7 +200,7 @@ lc3plus_encoder_top u_dut (
 // 测试向量生成
 //=============================================================================
 
-task generate_test_audio();
+task generate_test_audio;
     integer i;
     real freq, phase, amplitude;
     begin
@@ -264,7 +264,7 @@ endtask
 // 编码器配置任务
 //=============================================================================
 
-task configure_encoder();
+task configure_encoder;
     begin
         $display("[CONFIG] 配置LC3plus编码器...");
         
@@ -331,16 +331,22 @@ task receive_bitstream(input integer frame_num);
         // 等待第一个输出字节
         wait(m_axis_bitstream_tvalid);
         
-        while (m_axis_bitstream_tvalid) begin
+        while (m_axis_bitstream_tvalid && !m_axis_bitstream_tlast) begin
             @(posedge clk);
             if (m_axis_bitstream_tvalid && m_axis_bitstream_tready) begin
                 output_data[output_index] = m_axis_bitstream_tdata;
                 output_index = output_index + 1;
                 byte_count = byte_count + 1;
-                
-                if (m_axis_bitstream_tlast) begin
-                    break;
-                end
+            end
+        end
+        
+        // 处理最后一个字节
+        if (m_axis_bitstream_tvalid && m_axis_bitstream_tlast) begin
+            @(posedge clk);
+            if (m_axis_bitstream_tvalid && m_axis_bitstream_tready) begin
+                output_data[output_index] = m_axis_bitstream_tdata;
+                output_index = output_index + 1;
+                byte_count = byte_count + 1;
             end
         end
         
@@ -421,7 +427,7 @@ end
 // 结果验证
 //=============================================================================
 
-task verify_results();
+task verify_results;
     integer expected_bytes, actual_bytes;
     real compression_ratio;
     begin

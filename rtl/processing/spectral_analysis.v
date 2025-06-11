@@ -346,7 +346,7 @@ function [15:0] envelope_smooth;
 endfunction
 
 // 掩蔽阈值计算
-function [15:0] masking_threshold;
+function [15:0] calc_masking_threshold;
     input [15:0] envelope;
     input [15:0] masking_coeff;
     reg [31:0] temp_result;
@@ -354,7 +354,7 @@ function [15:0] masking_threshold;
         // 简化的掩蔽计算: threshold = envelope * masking_coeff
         temp_result = envelope * masking_coeff;
         // 归一化到Q8.8格式
-        masking_threshold = temp_result[23:8];
+        calc_masking_threshold = temp_result[23:8];
     end
 endfunction
 
@@ -459,7 +459,7 @@ always @(posedge clk or negedge rst_n) begin
                     spectral_envelope_reg <= mem_req_rdata[31:16];
                     
                     // 计算掩蔽阈值
-                    masking_threshold_reg <= masking_threshold(
+                    masking_threshold_reg <= calc_masking_threshold(
                         mem_req_rdata[31:16],  // 包络
                         bark_req_data[31:16]   // 掩蔽系数
                     );
