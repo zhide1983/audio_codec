@@ -13,6 +13,8 @@
 // Version: 1.0
 //******************************************************************************
 
+`timescale 1ns/1ps
+
 module coeff_storage_rom (
     // Clock - all operations are synchronous to this clock
     input               clk,

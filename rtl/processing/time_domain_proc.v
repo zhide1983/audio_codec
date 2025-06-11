@@ -16,6 +16,8 @@
 // Version: 1.0
 //******************************************************************************
 
+`timescale 1ns/1ps
+
 module time_domain_proc (
     // Clock and reset
     input               clk,
