@@ -1,0 +1,546 @@
+{
+  "register_map": {
+    "version": "1.1",
+    "description": "LC3plus Audio Codec Register Map",
+    "revision": "2024-06-11",
+    "base_address": "0x0000",
+    "address_width": 16,
+    "data_width": 32,
+    "addressing": "byte",
+    
+    "hardened_configs": {
+      "description": "顶层硬化配置 - 编译时确定，用于面积优化",
+      "sample_rate": {
+        "options": ["MAX_SAMPLE_RATE_48K", "MAX_SAMPLE_RATE_96K"],
+        "default": "MAX_SAMPLE_RATE_48K",
+        "description": "最大支持采样率：48kHz或96kHz"
+      },
+      "sample_width": {
+        "options": ["SUPPORT_16BIT", "SUPPORT_24BIT"],
+        "default": "SUPPORT_16BIT", 
+        "description": "音频采样精度：16bit或24bit"
+      },
+      "verilog_defines": {
+        "MAX_SAMPLE_RATE_48K": "支持最高48kHz采样率，减少MDCT长度和存储器需求",
+        "MAX_SAMPLE_RATE_96K": "支持最高96kHz采样率，完整功能",
+        "SUPPORT_16BIT": "仅支持16bit采样，减少数据路径位宽",
+        "SUPPORT_24BIT": "支持16bit和24bit采样，完整精度"
+      }
+    },
+    
+    "registers": [
+      {
+        "name": "REG_VERSION",
+        "address": "0x0000",
+        "access": "RO",
+        "reset_value": "0x01010000",
+        "description": "版本信息寄存器",
+        "fields": [
+          {
+            "name": "MAJOR_VERSION",
+            "bits": "[31:24]",
+            "description": "主版本号",
+            "reset_value": "0x01"
+          },
+          {
+            "name": "MINOR_VERSION", 
+            "bits": "[23:16]",
+            "description": "次版本号",
+            "reset_value": "0x01"
+          },
+          {
+            "name": "PATCH_VERSION",
+            "bits": "[15:8]",
+            "description": "补丁版本号",
+            "reset_value": "0x00"
+          },
+          {
+            "name": "BUILD_ID",
+            "bits": "[7:0]",
+            "description": "构建标识",
+            "reset_value": "0x00"
+          }
+        ]
+      },
+      
+      {
+        "name": "REG_FEATURE_FLAGS",
+        "address": "0x0004", 
+        "access": "RO",
+        "reset_value": "0x00000000",
+        "description": "硬化配置特性标志寄存器",
+        "fields": [
+          {
+            "name": "MAX_SAMPLE_RATE",
+            "bits": "[1:0]",
+            "description": "最大采样率支持: 00=48kHz, 01=96kHz, 10-11=保留",
+            "reset_value": "0x00"
+          },
+          {
+            "name": "MAX_SAMPLE_WIDTH",
+            "bits": "[3:2]",
+            "description": "最大采样位宽: 00=16bit, 01=24bit, 10-11=保留", 
+            "reset_value": "0x00"
+          },
+          {
+            "name": "CODEC_SUPPORT",
+            "bits": "[7:4]",
+            "description": "编解码器支持: bit4=LC3plus, bit5=LC3, bit6=Opus, bit7=保留",
+            "reset_value": "0x01"
+          },
+          {
+            "name": "RESERVED",
+            "bits": "[31:8]",
+            "description": "保留位",
+            "reset_value": "0x000000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_CONTROL",
+        "address": "0x0008",
+        "access": "RW", 
+        "reset_value": "0x00000000",
+        "description": "主控制寄存器",
+        "fields": [
+          {
+            "name": "CODEC_ENABLE",
+            "bits": "[0]",
+            "description": "编解码器使能: 0=禁用, 1=使能",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "MODE_SELECT",
+            "bits": "[1]",
+            "description": "工作模式: 0=编码器, 1=解码器",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "SOFT_RESET",
+            "bits": "[2]",
+            "description": "软件复位: 写1触发复位",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "RESERVED",
+            "bits": "[31:3]",
+            "description": "保留位",
+            "reset_value": "0x00000000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_STATUS",
+        "address": "0x000C",
+        "access": "RO",
+        "reset_value": "0x00000001",
+        "description": "状态寄存器",
+        "fields": [
+          {
+            "name": "READY",
+            "bits": "[0]",
+            "description": "就绪状态: 0=忙碌, 1=就绪",
+            "reset_value": "0x1"
+          },
+          {
+            "name": "ERROR",
+            "bits": "[1]",
+            "description": "错误状态: 0=正常, 1=错误",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "FRAME_PROCESSING",
+            "bits": "[2]",
+            "description": "帧处理状态: 0=空闲, 1=处理中",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "BUFFER_FULL",
+            "bits": "[3]",
+            "description": "缓冲器满: 0=未满, 1=已满",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "RESERVED",
+            "bits": "[31:4]",
+            "description": "保留位",
+            "reset_value": "0x0000000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_LC3PLUS_CONFIG",
+        "address": "0x0010",
+        "access": "RW",
+        "reset_value": "0x00000A02",
+        "description": "LC3plus配置寄存器",
+        "fields": [
+          {
+            "name": "FRAME_DURATION",
+            "bits": "[1:0]",
+            "description": "帧时长: 00=2.5ms, 01=5ms, 10=10ms, 11=保留",
+            "reset_value": "0x2",
+            "options": {
+              "0": "2.5ms - 120样本@48kHz",
+              "1": "5ms - 240样本@48kHz", 
+              "2": "10ms - 480样本@48kHz",
+              "3": "保留"
+            }
+          },
+          {
+            "name": "CHANNEL_CONFIG",
+            "bits": "[2]",
+            "description": "通道配置: 0=单通道(单声道), 1=双通道(立体声)",
+            "reset_value": "0x0",
+            "options": {
+              "0": "单通道 - 单声道",
+              "1": "双通道 - 立体声"
+            }
+          },
+          {
+            "name": "SAMPLE_RATE",
+            "bits": "[7:3]",
+            "description": "采样率配置",
+            "reset_value": "0x01",
+            "options": {
+              "0": "8 kHz",
+              "1": "16 kHz", 
+              "2": "24 kHz",
+              "3": "32 kHz",
+              "4": "44.1 kHz",
+              "5": "48 kHz",
+              "6": "88.2 kHz (需要MAX_SAMPLE_RATE_96K)",
+              "7": "96 kHz (需要MAX_SAMPLE_RATE_96K)",
+              "8-31": "保留"
+            }
+          },
+          {
+            "name": "SAMPLE_WIDTH",
+            "bits": "[9:8]",
+            "description": "采样位宽: 00=16bit, 01=24bit, 10-11=保留",
+            "reset_value": "0x0",
+            "constraint": "需要对应的硬化配置支持"
+          },
+          {
+            "name": "BIT_RATE",
+            "bits": "[17:10]",
+            "description": "比特率(kbps): 16-320, 步长2kbps",
+            "reset_value": "0x20",
+            "calculation": "实际比特率 = (value * 2 + 16) kbps"
+          },
+          {
+            "name": "RESERVED",
+            "bits": "[31:18]",
+            "description": "保留位",
+            "reset_value": "0x0000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_BANDWIDTH_CONFIG",
+        "address": "0x0014",
+        "access": "RW",
+        "reset_value": "0x00000005",
+        "description": "带宽控制配置寄存器",
+        "fields": [
+          {
+            "name": "BANDWIDTH_MODE",
+            "bits": "[2:0]",
+            "description": "带宽模式",
+            "reset_value": "0x5",
+            "options": {
+              "0": "4 kHz - 窄带",
+              "1": "8 kHz - 宽带",
+              "2": "12 kHz - 超宽带",
+              "3": "16 kHz - 全带",
+              "4": "20 kHz - 高保真",
+              "5": "24 kHz - 全频段",
+              "6": "自适应带宽",
+              "7": "保留"
+            }
+          },
+          {
+            "name": "ADAPTIVE_BW",
+            "bits": "[3]",
+            "description": "自适应带宽使能: 0=固定, 1=自适应",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "RESERVED",
+            "bits": "[31:4]",
+            "description": "保留位",
+            "reset_value": "0x0000000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_ERROR_PROTECTION",
+        "address": "0x0018",
+        "access": "RW",
+        "reset_value": "0x00000002",
+        "description": "错误保护配置寄存器",
+        "fields": [
+          {
+            "name": "EP_MODE",
+            "bits": "[2:0]",
+            "description": "错误保护模式",
+            "reset_value": "0x2",
+            "options": {
+              "0": "OFF - 无错误保护",
+              "1": "ZERO - 零填充",
+              "2": "LOW - 低级保护",
+              "3": "MEDIUM - 中级保护", 
+              "4": "HIGH - 高级保护",
+              "5-7": "保留"
+            }
+          },
+          {
+            "name": "RS_ENABLE",
+            "bits": "[3]",
+            "description": "Reed-Solomon编码使能: 0=禁用, 1=使能",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "RESERVED",
+            "bits": "[31:4]",
+            "description": "保留位", 
+            "reset_value": "0x0000000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_INTERRUPT_ENABLE",
+        "address": "0x001C",
+        "access": "RW",
+        "reset_value": "0x00000000",
+        "description": "中断使能寄存器",
+        "fields": [
+          {
+            "name": "FRAME_DONE_IE",
+            "bits": "[0]",
+            "description": "帧处理完成中断使能",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "ERROR_IE",
+            "bits": "[1]",
+            "description": "错误中断使能",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "BUFFER_FULL_IE",
+            "bits": "[2]",
+            "description": "缓冲器满中断使能",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "RESERVED",
+            "bits": "[31:3]",
+            "description": "保留位",
+            "reset_value": "0x00000000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_INTERRUPT_STATUS",
+        "address": "0x0020",
+        "access": "RW1C",
+        "reset_value": "0x00000000",
+        "description": "中断状态寄存器 (写1清零)",
+        "fields": [
+          {
+            "name": "FRAME_DONE_IS",
+            "bits": "[0]",
+            "description": "帧处理完成中断状态",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "ERROR_IS",
+            "bits": "[1]", 
+            "description": "错误中断状态",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "BUFFER_FULL_IS",
+            "bits": "[2]",
+            "description": "缓冲器满中断状态",
+            "reset_value": "0x0"
+          },
+          {
+            "name": "RESERVED",
+            "bits": "[31:3]",
+            "description": "保留位",
+            "reset_value": "0x00000000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_AUDIO_INPUT_BASE",
+        "address": "0x0100",
+        "access": "RW",
+        "reset_value": "0x00000000",
+        "description": "音频输入缓冲器基地址",
+        "fields": [
+          {
+            "name": "INPUT_BASE_ADDR",
+            "bits": "[31:0]",
+            "description": "32位对齐的输入缓冲器基地址",
+            "reset_value": "0x00000000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_AUDIO_INPUT_SIZE",
+        "address": "0x0104",
+        "access": "RW",
+        "reset_value": "0x00000000",
+        "description": "音频输入缓冲器大小",
+        "fields": [
+          {
+            "name": "INPUT_SIZE",
+            "bits": "[15:0]",
+            "description": "输入缓冲器大小(字节数)",
+            "reset_value": "0x0000"
+          },
+          {
+            "name": "RESERVED",
+            "bits": "[31:16]",
+            "description": "保留位",
+            "reset_value": "0x0000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_BITSTREAM_OUTPUT_BASE",
+        "address": "0x0108",
+        "access": "RW",
+        "reset_value": "0x00000000",
+        "description": "比特流输出缓冲器基地址",
+        "fields": [
+          {
+            "name": "OUTPUT_BASE_ADDR",
+            "bits": "[31:0]",
+            "description": "32位对齐的输出缓冲器基地址",
+            "reset_value": "0x00000000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_BITSTREAM_OUTPUT_SIZE",
+        "address": "0x010C",
+        "access": "RW",
+        "reset_value": "0x00000000",
+        "description": "比特流输出缓冲器大小",
+        "fields": [
+          {
+            "name": "OUTPUT_SIZE",
+            "bits": "[15:0]",
+            "description": "输出缓冲器大小(字节数)",
+            "reset_value": "0x0000"
+          },
+          {
+            "name": "RESERVED",
+            "bits": "[31:16]",
+            "description": "保留位",
+            "reset_value": "0x0000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_FRAME_COUNTER",
+        "address": "0x0200",
+        "access": "RO",
+        "reset_value": "0x00000000",
+        "description": "帧计数器",
+        "fields": [
+          {
+            "name": "FRAME_COUNT",
+            "bits": "[31:0]",
+            "description": "已处理的帧数量",
+            "reset_value": "0x00000000"
+          }
+        ]
+      },
+
+      {
+        "name": "REG_PERFORMANCE_COUNTER",
+        "address": "0x0204",
+        "access": "RO",
+        "reset_value": "0x00000000",
+        "description": "性能计数器",
+        "fields": [
+          {
+            "name": "CYCLE_COUNT",
+            "bits": "[31:0]",
+            "description": "当前帧处理周期数",
+            "reset_value": "0x00000000"
+          }
+        ]
+      }
+    ],
+
+    "memory_map": {
+      "register_space": {
+        "base": "0x0000",
+        "size": "0x1000",
+        "description": "寄存器空间 (4KB)"
+      },
+      "coefficient_rom": {
+        "base": "0x10000",
+        "size": "0x4000", 
+        "description": "系数ROM空间 (16KB)",
+        "content": "MDCT系数, 窗函数, 量化表"
+      },
+      "audio_buffer": {
+        "base": "0x20000",
+        "size": "0x4000",
+        "description": "音频缓冲器 (16KB)",
+        "access": "通过仲裁器访问单端口SRAM"
+      },
+      "work_buffer": {
+        "base": "0x30000",
+        "size": "0x4000",
+        "description": "工作缓冲器 (16KB)",
+        "access": "通过仲裁器访问单端口SRAM"
+      }
+    },
+
+    "configuration_examples": {
+      "typical_48k_stereo": {
+        "description": "48kHz立体声，10ms帧长，128kbps",
+        "REG_LC3PLUS_CONFIG": "0x00001A02",
+        "REG_BANDWIDTH_CONFIG": "0x00000005"
+      },
+      "low_power_mono": {
+        "description": "16kHz单声道，10ms帧长，32kbps",
+        "REG_LC3PLUS_CONFIG": "0x00000822",
+        "REG_BANDWIDTH_CONFIG": "0x00000001"
+      },
+      "high_quality": {
+        "description": "96kHz立体声，2.5ms帧长，320kbps",
+        "REG_LC3PLUS_CONFIG": "0x00009E04",
+        "REG_BANDWIDTH_CONFIG": "0x00000005",
+        "constraint": "需要MAX_SAMPLE_RATE_96K硬化配置"
+      }
+    },
+
+    "rtl_design_constraints": {
+      "shift_operators": "禁用 <<, >>, >>> 操作符",
+      "for_loops": "仅允许常数循环次数的for语句",
+      "memory_ports": "仅使用单端口SRAM，通过仲裁器多路访问",
+      "verilog_standard": "严格遵循Verilog 2001标准"
+         }
+   }
+ } 

@@ -1,0 +1,3 @@
+F:/LC3/LC3plus_ETSI_src_v17171_20200723/project/cmake-build-debug/CMakeFiles/project.dir
+F:/LC3/LC3plus_ETSI_src_v17171_20200723/project/cmake-build-debug/CMakeFiles/edit_cache.dir
+F:/LC3/LC3plus_ETSI_src_v17171_20200723/project/cmake-build-debug/CMakeFiles/rebuild_cache.dir

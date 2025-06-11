@@ -1,0 +1,4 @@
+C:\Users\Derek\Downloads\CLion-2022.2.4.win\bin\cmake\win\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/Users/Derek/Downloads/CLion-2022.2.4.win/bin/ninja/win/ninja.exe -G Ninja -S F:\LC3\LC3plus_ETSI_src_v17171_20200723 -B F:\LC3\LC3plus_ETSI_src_v17171_20200723\cmake-build-debug
+-- Configuring done
+-- Generating done
+-- Build files have been written to: F:/LC3/LC3plus_ETSI_src_v17171_20200723/cmake-build-debug

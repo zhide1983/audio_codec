@@ -1,0 +1,60 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.23"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "LC3plus_ETSI_src_v17171_20200723",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "LC3plus_ETSI_src_v17171_20200723::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-LC3plus_ETSI_src_v17171_20200723-Debug-59aa9d9472de63e79d1e.json",
+					"name" : "LC3plus_ETSI_src_v17171_20200723",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "F:/LC3/LC3plus_ETSI_src_v17171_20200723/cmake-build-debug",
+		"source" : "F:/LC3/LC3plus_ETSI_src_v17171_20200723"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}
