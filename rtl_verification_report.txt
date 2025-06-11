@@ -1,0 +1,93 @@
+============================================================
+LC3plus编码器RTL验证报告
+============================================================
+
+📊 项目概述:
+  总模块数: 11
+  总代码行数: 5720
+  平均模块大小: 520 行
+  最大模块: lc3plus_encoder_top (727 行)
+
+🔧 模块列表:
+  lc3plus_encoder_top:
+    文件: lc3plus_encoder_top.v
+    行数: 727
+    输入端口: 20
+    输出端口: 22
+    时间尺度: ✓
+  audio_buffer_ram:
+    文件: audio_buffer_ram.v
+    行数: 283
+    输入端口: 17
+    输出端口: 9
+    时间尺度: ✓
+  coeff_storage_rom:
+    文件: coeff_storage_rom.v
+    行数: 196
+    输入端口: 3
+    输出端口: 1
+    时间尺度: ✓
+  work_buffer_ram:
+    文件: work_buffer_ram.v
+    行数: 377
+    输入端口: 28
+    输出端口: 13
+    时间尺度: ✓
+  bitstream_packing:
+    文件: bitstream_packing.v
+    行数: 602
+    输入端口: 20
+    输出端口: 15
+    时间尺度: ✓
+  entropy_coding:
+    文件: entropy_coding.v
+    行数: 659
+    输入端口: 23
+    输出端口: 16
+    时间尺度: ✓
+  mdct_transform:
+    文件: mdct_transform.v
+    行数: 487
+    输入端口: 14
+    输出端口: 15
+    时间尺度: ✓
+  spectral_analysis:
+    文件: spectral_analysis.v
+    行数: 684
+    输入端口: 23
+    输出端口: 16
+    时间尺度: ✓
+  quantization_control:
+    文件: quantization_control.v
+    行数: 664
+    输入端口: 25
+    输出端口: 15
+    时间尺度: ✓
+  time_domain_proc:
+    文件: time_domain_proc.v
+    行数: 430
+    输入端口: 20
+    输出端口: 15
+    时间尺度: ✓
+  audio_codec_top:
+    文件: audio_codec_top.v
+    行数: 611
+    输入端口: 23
+    输出端口: 36
+    时间尺度: ✓
+
+⚠️ 警告:
+  - 模块 coeff_storage_rom 可能缺少复位信号
+
+📈 代码质量评估:
+  整体质量: 优秀 (A+)
+  错误数量: 0
+  警告数量: 1
+
+💡 改进建议:
+  - 修复所有编译错误
+  - 添加缺失的时间尺度指令
+  - 检查模块端口连接
+  - 确保时钟和复位信号正确连接
+
+============================================================
