@@ -392,10 +392,10 @@ initial begin
     $display("=================================================");
     
     // 生成测试音频
-    generate_test_audio();
+    generate_test_audio;
     
     // 配置编码器
-    configure_encoder();
+    configure_encoder;
     
     // 处理测试帧
     for (frame_count = 0; frame_count < TEST_FRAMES; frame_count = frame_count + 1) begin
@@ -414,7 +414,7 @@ initial begin
     end
     
     // 验证结果
-    verify_results();
+    verify_results;
     
     $display("=================================================");
     $display("LC3plus编码器基本验证测试完成");
