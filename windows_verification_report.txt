@@ -1,0 +1,86 @@
+LC3plus编码器Windows验证报告
+==================================================
+
+验证时间: 2025-06-11 18:35:35
+项目路径: D:\Users\Derek\AIwork\audio_codec
+
+项目统计:
+  总模块数: 10
+  总代码行数: 3770
+  错误数量: 0
+  警告数量: 0
+
+代码质量: A+ (优秀)
+总体评分: 100/100
+
+模块详情:
+  lc3plus_encoder_top:
+    文件: lc3plus_encoder_top_fixed.v
+    行数: 423
+    输入端口: 20
+    输出端口: 22
+    时间尺度: ✓
+
+  audio_buffer_ram:
+    文件: audio_buffer_ram.v
+    行数: 168
+    输入端口: 21
+    输出端口: 9
+    时间尺度: ✓
+
+  implements:
+    文件: time_domain_proc.v
+    行数: 299
+    输入端口: 20
+    输出端口: 16
+    时间尺度: ✓
+
+  work_buffer_ram:
+    文件: work_buffer_ram.v
+    行数: 250
+    输入端口: 29
+    输出端口: 13
+    时间尺度: ✓
+
+  bitstream_packing:
+    文件: bitstream_packing.v
+    行数: 425
+    输入端口: 20
+    输出端口: 15
+    时间尺度: ✓
+
+  entropy_coding:
+    文件: entropy_coding.v
+    行数: 467
+    输入端口: 23
+    输出端口: 16
+    时间尺度: ✓
+
+  mdct_transform:
+    文件: mdct_transform.v
+    行数: 346
+    输入端口: 14
+    输出端口: 14
+    时间尺度: ✓
+
+  spectral_analysis:
+    文件: spectral_analysis.v
+    行数: 495
+    输入端口: 23
+    输出端口: 16
+    时间尺度: ✓
+
+  quantization_control:
+    文件: quantization_control.v
+    行数: 481
+    输入端口: 25
+    输出端口: 15
+    时间尺度: ✓
+
+  audio_codec_top:
+    文件: audio_codec_top.v
+    行数: 416
+    输入端口: 23
+    输出端口: 36
+    时间尺度: ✓
+

@@ -58,10 +58,10 @@ module lc3plus_encoder_top #(
     output                      pslverr,            // APB错误
     
     // 系统存储器接口
-    output                      mem_req_valid,      // 存储器请求有效
-    output      [15:0]          mem_req_addr,       // 存储器地址
-    output      [31:0]          mem_req_wdata,      // 写数据
-    output                      mem_req_wen,        // 写使能
+    output reg                  mem_req_valid,      // 存储器请求有效
+    output reg  [15:0]          mem_req_addr,       // 存储器地址
+    output reg  [31:0]          mem_req_wdata,      // 写数据
+    output reg                  mem_req_wen,        // 写使能
     input                       mem_req_ready,      // 存储器就绪
     input       [31:0]          mem_req_rdata,      // 读数据
     
@@ -128,8 +128,7 @@ reg     [31:0]          perf_reg1;
 reg     [31:0]          debug_reg;
 wire    [31:0]          version_reg;
 
-// 模块间连接信号 - MDCT Transform
-wire    [9:0]           audio_sample_index;
+// 模块间连接信号 - MDCT
 wire                    mdct_input_ready;
 wire                    mdct_output_valid;
 wire    [15:0]          mdct_output_real;
@@ -144,6 +143,10 @@ wire                    mdct_coeff_req_valid;
 wire    [13:0]          mdct_coeff_req_addr;
 wire    [31:0]          mdct_coeff_req_data;
 wire                    mdct_coeff_req_ready;
+
+// 音频样本索引计数器和其他缺失信号
+reg     [9:0]           audio_sample_index;
+wire    [31:0]          spectral_input_data;
 
 // 模块间连接信号 - Spectral Analysis
 wire    [4:0]           spectral_bandwidth_config;
@@ -213,35 +216,35 @@ wire                    mdct_mem_req_valid;
 wire    [11:0]          mdct_mem_req_addr;
 wire    [31:0]          mdct_mem_req_wdata;
 wire                    mdct_mem_req_wen;
-wire                    mdct_mem_req_ready;
+reg                     mdct_mem_req_ready;
 wire    [31:0]          mdct_mem_req_rdata;
 
 wire                    spectral_mem_req_valid;
 wire    [11:0]          spectral_mem_req_addr;
 wire    [31:0]          spectral_mem_req_wdata;
 wire                    spectral_mem_req_wen;
-wire                    spectral_mem_req_ready;
+reg                     spectral_mem_req_ready;
 wire    [31:0]          spectral_mem_req_rdata;
 
 wire                    quant_mem_req_valid;
 wire    [11:0]          quant_mem_req_addr;
 wire    [31:0]          quant_mem_req_wdata;
 wire                    quant_mem_req_wen;
-wire                    quant_mem_req_ready;
+reg                     quant_mem_req_ready;
 wire    [31:0]          quant_mem_req_rdata;
 
 wire                    entropy_mem_req_valid;
 wire    [11:0]          entropy_mem_req_addr;
 wire    [31:0]          entropy_mem_req_wdata;
 wire                    entropy_mem_req_wen;
-wire                    entropy_mem_req_ready;
+reg                     entropy_mem_req_ready;
 wire    [31:0]          entropy_mem_req_rdata;
 
 wire                    packing_mem_req_valid;
 wire    [11:0]          packing_mem_req_addr;
 wire    [31:0]          packing_mem_req_wdata;
 wire                    packing_mem_req_wen;
-wire                    packing_mem_req_ready;
+reg                     packing_mem_req_ready;
 wire    [31:0]          packing_mem_req_rdata;
 
 // 性能统计信号
@@ -431,22 +434,26 @@ quantization_control u_quantization_control (
     // 配置接口
     .frame_duration         (frame_duration),
     .target_bitrate         (target_bitrate),
-    .enable                 (encoder_enable && (current_pipeline_stage == STAGE_QUANTIZE)),
+    .sample_rate            (sample_rate),
+    .channel_mode           (channel_mode),
     
-    // 输入数据接口
-    .mdct_valid             (quant_input_valid),
-    .mdct_data              (quant_input_data),
-    .spectral_envelope      (quant_envelope),
-    .masking_threshold      (quant_masking),
-    .mdct_ready             (quant_input_ready),
+    // 频谱分析输入接口
+    .spectral_valid         (quant_input_valid),
+    .spectral_data          (quant_input_data[23:0]),
+    .spectral_envelope      (quant_envelope[23:0]),
+    .spectral_masking       (quant_masking[15:0]),
+    .spectral_bandwidth     (8'hFF), // 满带宽
+    .spectral_index         (quant_index),
+    .spectral_frame_end     (quant_frame_done),
+    .spectral_ready         (quant_input_ready),
     
     // 量化输出接口
     .quant_valid            (quant_output_valid),
-    .quantized_data         (quant_output_data),
-    .quantization_step      (quant_step),
-    .scale_factor           (quant_scale),
-    .coeff_index            (quant_index),
-    .frame_done             (quant_frame_done),
+    .quant_data             (quant_output_data),
+    .quant_step             (quant_step),
+    .quant_scale            (quant_scale),
+    .quant_index            (/* unused */),
+    .quant_frame_end        (/* unused */),
     .quant_ready            (quant_output_ready),
     
     // 存储器接口
@@ -457,8 +464,10 @@ quantization_control u_quantization_control (
     .mem_req_ready          (quant_mem_req_ready),
     .mem_req_rdata          (quant_mem_req_rdata),
     
-    // 状态输出
-    .quantization_busy      (),
+    // 控制和状态信号
+    .enable                 (encoder_enable && (current_pipeline_stage == STAGE_QUANTIZE)),
+    .processing             (),
+    .status_reg             (),
     .debug_info             (debug_quantization)
 );
 
@@ -560,19 +569,27 @@ bitstream_packing u_bitstream_packing (
 );
 
 //=============================================================================
+// MDCT系数ROM简单处理 (简化版本)
+//=============================================================================
+
+// 简化的MDCT系数ROM响应 - 返回固定系数
+assign mdct_coeff_req_ready = 1'b1;
+assign mdct_coeff_req_data  = 32'h40000000; // 固定系数值 (1.0 in fixed point)
+
+//=============================================================================
 // 模块间连接逻辑
 //=============================================================================
 
 // MDCT到频谱分析连接
 assign spectral_input_valid = mdct_output_valid;
-assign spectral_input_data  = mdct_output_data;
+assign spectral_input_data  = {mdct_output_real, mdct_output_imag}; // 组合实部和虚部
 assign spectral_input_index = mdct_output_index;
 assign mdct_output_ready    = spectral_input_ready;
 
 // 频谱分析到量化控制连接
 assign quant_input_valid = spectral_output_valid;
-assign quant_input_data  = spectral_input_data;  // MDCT数据传递
-assign quant_envelope    = spectral_envelope;
+assign quant_input_data  = spectral_input_data[23:0];  // MDCT数据传递，取低24位
+assign quant_envelope    = spectral_envelope[23:0];    // 转换为24位
 assign quant_masking     = spectral_masking;
 assign spectral_output_ready = quant_input_ready;
 
@@ -596,7 +613,7 @@ assign entropy_output_ready = packing_input_ready;
 //=============================================================================
 
 // 音频输入接口
-assign s_axis_audio_tready = mdct_audio_ready && (current_pipeline_stage == STAGE_MDCT);
+assign s_axis_audio_tready = mdct_input_ready && (current_pipeline_stage == STAGE_MDCT);
 
 // 比特流输出接口
 assign m_axis_bitstream_tvalid = packing_output_valid && (current_pipeline_stage == STAGE_OUTPUT);
@@ -611,6 +628,25 @@ assign frame_processing  = (current_pipeline_stage != STAGE_IDLE);
 assign pipeline_stage    = current_pipeline_stage;
 assign performance_info  = perf_reg0;
 assign error_status      = error_reg;
+
+//=============================================================================
+// 音频样本索引计数器
+//=============================================================================
+
+// 音频样本索引计数器
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        audio_sample_index <= 10'b0;
+    end else begin
+        if (s_axis_audio_tvalid && s_axis_audio_tready) begin
+            if (s_axis_audio_tlast) begin
+                audio_sample_index <= 10'b0;  // 帧结束时重置
+            end else begin
+                audio_sample_index <= audio_sample_index + 1'b1;
+            end
+        end
+    end
+end
 
 //=============================================================================
 // 存储器仲裁器（简化版本）

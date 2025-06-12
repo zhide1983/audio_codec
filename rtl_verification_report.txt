@@ -3,18 +3,12 @@ LC3plus编码器RTL验证报告
 ============================================================
 
 📊 项目概述:
-  总模块数: 11
-  总代码行数: 5720
-  平均模块大小: 520 行
-  最大模块: lc3plus_encoder_top (727 行)
+  总模块数: 10
+  总代码行数: 4995
+  平均模块大小: 499 行
+  最大模块: spectral_analysis (685 行)
 
 🔧 模块列表:
-  lc3plus_encoder_top:
-    文件: lc3plus_encoder_top.v
-    行数: 727
-    输入端口: 20
-    输出端口: 22
-    时间尺度: ✓
   audio_buffer_ram:
     文件: audio_buffer_ram.v
     行数: 283
@@ -47,13 +41,13 @@ LC3plus编码器RTL验证报告
     时间尺度: ✓
   mdct_transform:
     文件: mdct_transform.v
-    行数: 487
+    行数: 488
     输入端口: 14
     输出端口: 15
     时间尺度: ✓
   spectral_analysis:
     文件: spectral_analysis.v
-    行数: 684
+    行数: 685
     输入端口: 23
     输出端口: 16
     时间尺度: ✓
@@ -76,12 +70,18 @@ LC3plus编码器RTL验证报告
     输出端口: 36
     时间尺度: ✓
 
+❌ 错误:
+  - 在文件 rtl\lc3plus_encoder_top.v 中未找到模块声明
+  - 在文件 rtl\lc3plus_encoder_top_backup.v 中未找到模块声明
+  - 在文件 rtl\lc3plus_encoder_top_corrected.v 中未找到模块声明
+  - 在文件 rtl\lc3plus_encoder_top_fixed.v 中未找到模块声明
+
 ⚠️ 警告:
   - 模块 coeff_storage_rom 可能缺少复位信号
 
 📈 代码质量评估:
-  整体质量: 优秀 (A+)
-  错误数量: 0
+  整体质量: 需要改进 (C)
+  错误数量: 4
   警告数量: 1
 
 💡 改进建议:
